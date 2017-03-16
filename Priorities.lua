@@ -547,17 +547,20 @@ local function classPriorities()
 			else
 				chatType = 'SAY'  -- for testing purposes
 			end
-			print(chatType)
+			--print(chatType)
 			vars.blessers = {}
+			print("-----blessers----")
 			for i = 1, groupCount do
 				local name, rank, subgroup, level, class, fileName, zone, online, isDead, role, isML = GetRaidRosterInfo(i)
 				testUnitID = getActionUnitID(groupType, i)	
 				role = UnitGroupRolesAssigned(testUnitID)
-				print(testUnitID, class, role)
 				if class == "Paladin" and role == "DAMAGER" then
-					vars.blessers[testUnitID] = {}
-					vars.blessers[testUnitID].wisdom = false
-					vars.blessers[testUnitID].kings = false
+					blesserCount = blesserCount + 1
+					vars.blessers[blesserCount] = {}
+					vars.blessers[blesserCount].wisdom = nil
+					vars.blessers[blesserCount].kings = nil
+					vars.blessers[blesserCount].caster = testUnitID
+					print(UnitName(testUnitID))
 				end
 			end
 			local b = 0
@@ -570,28 +573,30 @@ local function classPriorities()
 				while name ~= nil do
 					b = b + 1
 					name, rank, icon, count, dispelType, duration, expires, caster, isStealable, shouldConsolidate, spellID, canApplyAura, isBossDebuff, value1, value2, value3 = UnitAura(testUnitID, b, "HELPFUL")
-					if name == "Greater Blessing of Wisdom" then
-						--print(name, caster)
-						if vars.blessers[caster] ~= nil then
-							vars.blessers[caster].wisdom = true
-						end
-					elseif name == "Greater Blessing of Kings" then
-						if vars.blessers[caster] ~= nil then
-							vars.blessers[caster].kings = true
+					for bc = 1, blesserCount do
+						if caster == vars.blessers[bc].caster then
+							if name == "Greater Blessing of Wisdom" then
+								vars.blessers[bc].wisdom = testUnitID
+							elseif name == "Greater Blessing of Kings" then
+								vars.blessers[bc].kings = testUnitID
+							end
 						end
 					end
 				end
 			end
-			for k,v in pairs(vars.blessers) do
-				if vars.blessers ~= nil then
-					if not v.wisdom then
-						print(UnitName(k).." has an unused Greater Blessing of Wisdom")
-						SendChatMessage(UnitName(k).." has an available Greater Blessing of Wisdom", chatType)
-					end	
-					if not v.kings then
-						print(UnitName(k).." has an unused Greater Blessing of Kings")
-						SendChatMessage(UnitName(k).." has an available Greater Blessing of Kings", chatType)
-					end
+			print("-----Blessings-----")
+			for bc =1, blesserCount do
+				if vars.blessers[bc].wisdom == nil then
+					print(UnitName(vars.blessers[bc].caster).." has an unused Greater Blessing of Wisdom")
+					SendChatMessage(UnitName(vars.blessers[bc].caster).." has an available Greater Blessing of Wisdom", chatType)
+				else
+					print(UnitName(vars.blessers[bc].caster).." wisdom:"..UnitName(vars.blessers[bc].wisdom))
+				end	
+				if vars.blessers[bc].kings == nil then
+					print(UnitName(vars.blessers[bc].caster).." has an unused Greater Blessing of Kings")
+					SendChatMessage(UnitName(vars.blessers[bc].caster).." has an available Greater Blessing of Kings", chatType)
+				else
+					print(UnitName(vars.blessers[bc].caster).." kings:"..UnitName(vars.blessers[bc].kings))
 				end
 			end
 		end
